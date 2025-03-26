@@ -5,10 +5,10 @@ SERVER_SRCS := main.c
 all: clean build
 
 build-client:
-	gcc $(addprefix src/client/, $(CLIENT_SRCS)) -o bin/client
+	gcc $(addprefix src/client/, $(CLIENT_SRCS)) -I src/ -o bin/client
 
 build-server:
-	gcc $(addprefix src/server/, $(SERVER_SRCS)) -o bin/server
+	gcc $(addprefix src/server/, $(SERVER_SRCS)) -I src/ -o bin/server
 
 .PHONY: build
 build: build-client build-server
