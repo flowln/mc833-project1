@@ -7,6 +7,49 @@
 
 #include "common/configuration.h"
 
+
+/**
+ * Run a REPL-like interactive comamnd-line interface.
+ * This interactively sends commands to the server.
+ */
+void run_repl(int socket_fd)
+{
+    printf("Commands available:\n");
+    printf("  exit: Exit this REPL and close the server connection (same as Ctrl+D).\n");
+    printf("  raw <string>: Send a raw string directly to the server (for debug purposes).\n");
+    printf("\n");
+
+    int num_read;
+    size_t in_buffer_size = 1024;
+    char* in_buffer = NULL;
+    while (1) {
+        printf("> ");
+        num_read = getline(&in_buffer, &in_buffer_size, stdin);
+        if (num_read <= 0) {
+            free(in_buffer);
+            break;
+        }
+
+        // Strip newline
+        if (in_buffer[num_read - 1] == '\n') {
+            in_buffer[num_read - 1] = '\0';
+            num_read -= 1;
+        }
+
+        if (strncmp(in_buffer, "exit", 4) == 0) {
+            free(in_buffer);
+            break;
+        }
+        else if (strncmp(in_buffer, "raw ", 4) == 0) {
+            write(socket_fd, &in_buffer[4], num_read - 4);
+        }
+
+        free(in_buffer);
+        in_buffer = NULL;
+    }
+}
+
+
 int main(int argc, char* argv)
 {
     int socket_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -34,13 +77,7 @@ int main(int argc, char* argv)
         exit(EXIT_FAILURE);
     }
 
-    // TODO: Send something useful to the server.
-    sleep(2.0);
-
-    char* message = "hello there!";
-    write(socket_fd, message, strlen(message));
-
-    sleep(2.0);
+    run_repl(socket_fd);
 
     close(socket_fd);
     return EXIT_SUCCESS;
