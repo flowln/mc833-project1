@@ -7,6 +7,36 @@
 
 #include "common/configuration.h"
 
+
+/**
+ * Serve requests from the client application.
+ * This function should only be called from a separate process.
+ */
+void serve_client(int connection_fd)
+{
+    printf("New process is serving the client!\n");
+
+    int num_read;
+    char receive_buffer[1024];
+
+    while (1) {
+        num_read = recv(connection_fd, receive_buffer, 1024, 0);
+        if (num_read < 0) {
+            perror("Error '%d' ocurred while reading from the connection socket.");
+            close(connection_fd);
+            exit(EXIT_FAILURE);
+        }
+        if (num_read == 0) {
+            printf("Client has orderly closed the connection. Closing the connection on the server side.");
+            close(connection_fd);
+            exit(EXIT_SUCCESS);
+        }
+
+        printf("Received the following command from the client: %s\n", receive_buffer);
+    }
+}
+
+
 int main(int argc, char* argv)
 {
     int socket_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -45,8 +75,13 @@ int main(int argc, char* argv)
             exit_status = EXIT_FAILURE;
         }
 
-        // TODO: Fork / spawn new thread to use the new socket.
-        printf("A new connection was made!\n");
+        int pid = fork();
+        if (pid == 0) {
+            // Child process
+            close(socket_fd);
+
+            serve_client(connection_fd);
+        }
 
         close(connection_fd);
     }

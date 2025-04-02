@@ -34,7 +34,13 @@ int main(int argc, char* argv)
         exit(EXIT_FAILURE);
     }
 
-    // TODO: Send something to the server.
+    // TODO: Send something useful to the server.
+    sleep(2.0);
+
+    char* message = "hello there!";
+    write(socket_fd, message, strlen(message));
+
+    sleep(2.0);
 
     close(socket_fd);
     return EXIT_SUCCESS;
