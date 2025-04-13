@@ -59,6 +59,9 @@ void _addFilm(int connection_fd, FilmCatalog* catalog, char* arguments)
         if (res != 0) {
             const char* msg = "Failed to add film to catalog.";
             write(connection_fd, msg, strlen(msg));
+        } else {
+            const char* msg = "Successfully added film to catalog.";
+            write(connection_fd, msg, strlen(msg));
         }
     }
 }
@@ -106,7 +109,6 @@ void serve_client(int connection_fd)
             strcpy(arguments, &receive_buffer[9]);
 
             _addFilm(connection_fd, catalog, arguments);
-            printf("Added film or not\n");
 
             free(arguments);
         }
