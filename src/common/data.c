@@ -58,7 +58,9 @@ Film deserializeCommand(char* command_str)
         temp_arg_value = &temp_arg_value[1];
         temp_arg_value[temp_arg_value_len - 2] = '\0'; // Consume "'," at the end.
 
-        if (strcmp(arg_name, "title") == 0) {
+        if (strcmp(arg_name, "id") == 0) {
+            film.id = temp_arg_value;
+        } else if (strcmp(arg_name, "title") == 0) {
             film.title = temp_arg_value;
         } else if (strcmp(arg_name, "genres") == 0) {
             film.genres = temp_arg_value;
