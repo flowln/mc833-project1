@@ -173,7 +173,7 @@ int main(int argc, char* argv)
 
     sa.sin_family = AF_INET;
     sa.sin_port = htons(SERVER_LISTEN_PORT);
-    int addr_fill_sts = inet_pton(AF_INET, "127.0.0.1", &sa.sin_addr);
+    int addr_fill_sts = inet_pton(AF_INET, SERVER_LISTEN_HOST, &sa.sin_addr);
 
     if (addr_fill_sts == -1) {
         perror("Failed to save IP address into sockaddr buffer.");

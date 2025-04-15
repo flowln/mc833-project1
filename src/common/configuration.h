@@ -1,3 +1,4 @@
+#define SERVER_LISTEN_HOST "127.0.0.1"
 #define SERVER_LISTEN_PORT 61623
 
 #define SERVER_DB_LOCATION "catalog.db"
