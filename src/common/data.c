@@ -42,6 +42,7 @@ void serializeCommandLine(char* input, char* out, void (*token_func)(char**, cha
 Film deserializeCommand(char* command_str)
 {
     Film film;
+    film.genres = "";  // Default value.
 
     char* outer_save_ptr;
     char* inner_save_ptr;
