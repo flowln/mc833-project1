@@ -289,3 +289,56 @@ char* listFilmIDs(FilmCatalog* catalog)
 
     return output;
 }
+
+char* listAllFilms(FilmCatalog* catalog)
+{
+    ssize_t out_size = 4096;
+    char* output = calloc(out_size, sizeof(char));
+
+    const char* sql_command = "SELECT * FROM film_catalog";
+
+    sqlite3_stmt* statement;
+    int err_code = sqlite3_prepare_v2(catalog->db, sql_command, -1, &statement, NULL);
+    if (err_code != SQLITE_OK) {
+        printf("Failed to compile SQL command with exit code %d.\n", err_code);
+        free(output);
+        return NULL;
+    }
+
+    char row_info[4096];
+
+    int step_status = sqlite3_step(statement);
+    while (step_status == SQLITE_ROW) {
+        int id = sqlite3_column_int(statement, 0);
+        const unsigned char* title = sqlite3_column_text(statement, 1);
+        const unsigned char* genres = sqlite3_column_text(statement, 2);
+        const unsigned char* director = sqlite3_column_text(statement, 3);
+        const unsigned char* year = sqlite3_column_text(statement, 4);
+
+        sprintf(row_info, "%d,%s,%s,%s,%s;", id, title, genres, director, year);
+
+        if (strlen(row_info) + strlen(output) > out_size + 2) {
+            // Dynamically increase output size.
+            out_size *= 2;
+            char* new_output = calloc(out_size, sizeof(char));
+            memcpy(new_output, output, out_size / 2);
+            free(output);
+            output = new_output;
+        }
+
+        strcat(output, row_info);
+
+        step_status = sqlite3_step(statement);
+    }
+
+    if (step_status != SQLITE_DONE) {
+        printf("Failed to iterate over rows: %d\n", step_status);
+        sqlite3_finalize(statement);
+        free(output);
+        return NULL;
+    }
+
+    sqlite3_finalize(statement);
+
+    return output;
+}

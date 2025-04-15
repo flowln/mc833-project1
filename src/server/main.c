@@ -157,6 +157,18 @@ void serve_client(int connection_fd)
 
             free(info);
         }
+        else if (strncmp(receive_buffer, "list_all", 8) == 0) {
+            char* info = listAllFilms(catalog);
+            if (info == NULL) {
+                const char* msg = "Failed to list catalog information.";
+                write(connection_fd, msg, strlen(msg));
+                continue;
+            }
+
+            write(connection_fd, info, strlen(info));
+
+            free(info);
+        }
     }
 }
 

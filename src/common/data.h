@@ -42,3 +42,6 @@ int deleteFilmFromCatalog(FilmCatalog*, char* film_id);
 
 /* (4) Listar todos os títulos de filmes com seus identificadores */
 char* listFilmIDs(FilmCatalog*);
+
+/* (5) Listar informações de todos os filmes */
+char* listAllFilms(FilmCatalog*);

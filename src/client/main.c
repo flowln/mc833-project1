@@ -113,6 +113,7 @@ void run_repl(int socket_fd)
     printf("  add_genres -i <id> -g <genre> [<genre> ...]: Add new genres to a film in the catalog.\n");
     printf("  del_film -i <id>: Remove a film from the catalog.\n");
     printf("  list_ids: List film IDs and titles available on the catalog.\n");
+    printf("  list_all: List all films in the catalog, with their entire information.\n");
     printf("\n");
 
     int num_read;
@@ -181,6 +182,15 @@ void run_repl(int socket_fd)
         }
         else if (strncmp(in_buffer, "list_ids", 8) == 0) {
             const char* out_buffer = "list_ids";
+            write(socket_fd, out_buffer, strlen(out_buffer));
+
+            int response_num = recv(socket_fd, response_buf, response_buf_size, 0);
+            if (response_num > 0) {
+                printf("Server response: %s\n", response_buf);
+            }
+        }
+        else if (strncmp(in_buffer, "list_all", 8) == 0) {
+            const char* out_buffer = "list_all";
             write(socket_fd, out_buffer, strlen(out_buffer));
 
             int response_num = recv(socket_fd, response_buf, response_buf_size, 0);
