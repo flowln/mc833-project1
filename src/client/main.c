@@ -97,6 +97,9 @@ void run_repl(int socket_fd)
     char* response_buf = malloc(response_buf_size * sizeof(char));
 
     while (1) {
+        // Clean up response buffer between calls.
+        memset(response_buf, '\0', response_buf_size);
+
         printf("> ");
         num_read = getline(&in_buffer, &in_buffer_size, stdin);
         if (num_read <= 0) {
