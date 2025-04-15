@@ -187,6 +187,8 @@ void run_repl(int socket_fd)
             if (response_num > 0) {
                 printf("Server response: %s\n", response_buf);
             }
+        } else {
+            printf("No such command is available.\n");
         }
 
         free(in_buffer);
