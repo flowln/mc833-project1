@@ -9,7 +9,29 @@
 #include <arpa/inet.h>
 
 #include "common/configuration.h"
+#include "common/data.h"
 
+
+void _add_film_token_func(char** template, char* token)
+{
+    switch (token[0]) {
+        case 't':
+            *template = "title='%s',";
+            break;
+        case 'g':
+            *template = "genres='%s',";
+            break;
+        case 'd':
+            *template = "director='%s',";
+            break;
+        case 'y':
+            *template = "year='%s',";
+            break;
+        default:
+            printf("Invalid token: %s\n", token);
+            break;
+    }
+}
 
 /**
  * Properly format output of 'add_film' to send to the server.
@@ -19,53 +41,10 @@ char* format_add_film(char* input, int* out_len)
     char* out = malloc(4096 * sizeof(char));
     strcpy(out, "add_film ");
 
-    char* in_cpy = malloc(strlen(input) * sizeof(char));
-    strcpy(in_cpy, input);
-
-    char* token = strtok(in_cpy, "-");
-    // Skip first "add_film " token.
-    token = strtok(NULL, "-");
-
-    char* template = "";
-    char field[256];
-    while (token) {
-        switch (token[0]) {
-            case 't':
-                template = "title='%s',";
-                break;
-            case 'g':
-                template = "genres='%s',";
-                break;
-            case 'd':
-                template = "director='%s',";
-                break;
-            case 'y':
-                template = "year='%s',";
-                break;
-            default:
-                printf("Invalid token: %s\n", token);
-                break;
-        }
-
-        int token_len = strlen(token);
-        if (token[token_len - 1] == ' ')
-            token[token_len - 1] = '\0';
-
-        sprintf(field, template, &token[2]);
-        strcat(out, field);
-
-        token = strtok(NULL, "-");
-    }
-
-    // Remove last comma.
-    *out_len = strlen(out) - 1;
-    out[*out_len] = '\0';
-
-    free(in_cpy);
+    serializeCommandLine(input, out, _add_film_token_func, out_len);
 
     return out;
 }
-
 
 /**
  * Run a REPL-like interactive comamnd-line interface.

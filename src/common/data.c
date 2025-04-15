@@ -1,9 +1,77 @@
+// Needed for strtok_r
+#define _POSIX_C_SOURCE 1
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "configuration.h"
 #include "data.h"
+
+void serializeCommandLine(char* input, char* out, void (*token_func)(char**, char*),  int* out_len)
+{
+    char* in_cpy = malloc(strlen(input) * sizeof(char));
+    strcpy(in_cpy, input);
+
+    char* token = strtok(in_cpy, "-");
+    // Skip first 'function name' token.
+    token = strtok(NULL, "-");
+
+    char* template = "";
+    char field[256];
+    while (token) {
+        token_func(&template, token);
+
+        int token_len = strlen(token);
+        if (token[token_len - 1] == ' ')
+            token[token_len - 1] = '\0';
+
+        sprintf(field, template, &token[2]);
+        strcat(out, field);
+
+        token = strtok(NULL, "-");
+    }
+
+    // Remove last comma.
+    *out_len = strlen(out) - 1;
+    out[*out_len] = '\0';
+
+    free(in_cpy);
+}
+
+Film deserializeCommand(char* command_str)
+{
+    Film film;
+
+    char* outer_save_ptr;
+    char* inner_save_ptr;
+
+    char* argument = strtok_r(command_str, ",", &outer_save_ptr);
+    while (argument) {
+        char* arg_name = strtok_r(argument, "=", &inner_save_ptr);
+
+        char* temp_arg_value = strtok_r(NULL, "=", &inner_save_ptr);
+        int temp_arg_value_len = strlen(temp_arg_value);
+
+        // Strip ' characters.
+        temp_arg_value = &temp_arg_value[1];
+        temp_arg_value[temp_arg_value_len - 2] = '\0'; // Consume "'," at the end.
+
+        if (strcmp(arg_name, "title") == 0) {
+            film.title = temp_arg_value;
+        } else if (strcmp(arg_name, "genres") == 0) {
+            film.genres = temp_arg_value;
+        } else if (strcmp(arg_name, "director") == 0) {
+            film.director = temp_arg_value;
+        } else if (strcmp(arg_name, "year") == 0) {
+            film.year = temp_arg_value;
+        }
+
+        argument = strtok_r(NULL, ",", &outer_save_ptr);
+    }
+
+    return film;
+}
 
 FilmCatalog* createFilmCatalog()
 {
