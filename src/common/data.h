@@ -37,5 +37,8 @@ int addFilmToCatalog(FilmCatalog*, char* title, char* genres, char* director, ch
 /* (2) Adicionar um novo gênero a um filme */
 int addGenresToFilm(FilmCatalog*, char* film_id, char* new_genres);
 
+/* (3) Remover um filme pelo identificador */
+int deleteFilmFromCatalog(FilmCatalog*, char* film_id);
+
 /* (4) Listar todos os títulos de filmes com seus identificadores */
 char* listFilmIDs(FilmCatalog*);

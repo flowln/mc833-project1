@@ -60,6 +60,29 @@ void _addGenres(int connection_fd, FilmCatalog* catalog, char* arguments)
     }
 }
 
+void _delFilm(int connection_fd, FilmCatalog* catalog, char* arguments)
+{
+    Film film = deserializeCommand(arguments);
+
+    if (film.id == NULL) {
+        const char* msg = "Required field 'id' is missing.";
+        write(connection_fd, msg, strlen(msg));
+    } else {
+        int res = deleteFilmFromCatalog(catalog, film.id);
+
+        if (res == -2) {
+            const char* msg = "Failed to remove film from the catalog, as the provided ID is not valid.";
+            write(connection_fd, msg, strlen(msg));
+        } else if (res != 0) {
+            const char* msg = "Failed to remove film from the catalog.";
+            write(connection_fd, msg, strlen(msg));
+        } else {
+            const char* msg = "Successfully removed film from the catalog.";
+            write(connection_fd, msg, strlen(msg));
+        }
+    }
+}
+
 
 /**
  * Serve requests from the client application.
@@ -111,6 +134,14 @@ void serve_client(int connection_fd)
             strcpy(arguments, &receive_buffer[11]);
 
             _addGenres(connection_fd, catalog, arguments);
+
+            free(arguments);
+        }
+        if (strncmp(receive_buffer, "del_film", 8) == 0) {
+            char* arguments = malloc(strlen(&receive_buffer[9]) * sizeof(char));
+            strcpy(arguments, &receive_buffer[9]);
+
+            _delFilm(connection_fd, catalog, arguments);
 
             free(arguments);
         }

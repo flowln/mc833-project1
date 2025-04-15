@@ -74,6 +74,31 @@ char* format_add_genres(char* input, int* out_len)
     return out;
 }
 
+void _del_film_token_func(char** template, char* token)
+{
+    switch (token[0]) {
+        case 'i':
+            *template = "id='%s',";
+            break;
+        default:
+            printf("Invalid token: %s\n", token);
+            break;
+    }
+}
+
+/**
+ * Properly format output of 'del_film' to send to the server.
+ */
+char* format_del_film(char* input, int* out_len)
+{
+    char* out = malloc(4096 * sizeof(char));
+    strcpy(out, "del_film ");
+
+    serializeCommandLine(input, out, _del_film_token_func, out_len);
+
+    return out;
+}
+
 
 /**
  * Run a REPL-like interactive comamnd-line interface.
@@ -86,6 +111,7 @@ void run_repl(int socket_fd)
     printf("  raw <string>: Send a raw string directly to the server (for debug purposes).\n");
     printf("  add_film -t <title> -g <genre> [<genre> ...] -d <director> -y <year>: Add a new film to the catalog.\n");
     printf("  add_genres -i <id> -g <genre> [<genre> ...]: Add new genres to a film in the catalog.\n");
+    printf("  del_film -i <id>: Remove a film from the catalog.\n");
     printf("  list_ids: List film IDs and titles available on the catalog.\n");
     printf("\n");
 
@@ -134,6 +160,17 @@ void run_repl(int socket_fd)
         else if (strncmp(in_buffer, "add_genres", 10) == 0) {
             int len_out_buffer;
             char* out_buffer = format_add_genres(in_buffer, &len_out_buffer);
+            write(socket_fd, out_buffer, len_out_buffer);
+            free(out_buffer);
+
+            int response_num = recv(socket_fd, response_buf, response_buf_size, 0);
+            if (response_num > 0) {
+                printf("Server response: %s\n", response_buf);
+            }
+        }
+        else if (strncmp(in_buffer, "del_film", 8) == 0) {
+            int len_out_buffer;
+            char* out_buffer = format_del_film(in_buffer, &len_out_buffer);
             write(socket_fd, out_buffer, len_out_buffer);
             free(out_buffer);
 
