@@ -45,3 +45,6 @@ char* listFilmIDs(FilmCatalog*);
 
 /* (5) Listar informações de todos os filmes */
 char* listAllFilms(FilmCatalog*);
+
+/* (6) Listar informações de um filme específico */
+char* listFilmById(FilmCatalog*, char* film_id);

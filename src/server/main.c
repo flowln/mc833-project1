@@ -83,6 +83,26 @@ void _delFilm(int connection_fd, FilmCatalog* catalog, char* arguments)
     }
 }
 
+void _showFilm(int connection_fd, FilmCatalog* catalog, char* arguments)
+{
+    Film film = deserializeCommand(arguments);
+
+    if (film.id == NULL) {
+        const char* msg = "Required field 'id' is missing.";
+        write(connection_fd, msg, strlen(msg));
+    } else {
+        char* info = listFilmById(catalog, film.id);
+
+        if (info == NULL) {
+            const char* msg = "Failed to list information film about the film.";
+            write(connection_fd, msg, strlen(msg));
+        } else {
+            write(connection_fd, info, strlen(info));
+            free(info);
+        }
+    }
+}
+
 
 /**
  * Serve requests from the client application.
@@ -137,7 +157,7 @@ void serve_client(int connection_fd)
 
             free(arguments);
         }
-        if (strncmp(receive_buffer, "del_film", 8) == 0) {
+        else if (strncmp(receive_buffer, "del_film", 8) == 0) {
             char* arguments = malloc(strlen(&receive_buffer[9]) * sizeof(char));
             strcpy(arguments, &receive_buffer[9]);
 
@@ -168,6 +188,14 @@ void serve_client(int connection_fd)
             write(connection_fd, info, strlen(info));
 
             free(info);
+        }
+        else if (strncmp(receive_buffer, "show", 4) == 0) {
+            char* arguments = malloc(strlen(&receive_buffer[5]) * sizeof(char));
+            strcpy(arguments, &receive_buffer[5]);
+
+            _showFilm(connection_fd, catalog, arguments);
+
+            free(arguments);
         }
     }
 }
