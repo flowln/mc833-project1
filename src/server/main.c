@@ -103,6 +103,26 @@ void _showFilm(int connection_fd, FilmCatalog* catalog, char* arguments)
     }
 }
 
+void _showFilmByGenre(int connection_fd, FilmCatalog* catalog, char* arguments)
+{
+    Film film = deserializeCommand(arguments);
+
+    if (film.genres[0] == '\0') {
+        const char* msg = "Required field 'genres' is missing.";
+        write(connection_fd, msg, strlen(msg));
+    } else {
+        char* info = listFilmByGenre(catalog, film.genres);
+
+        if (info == NULL) {
+            const char* msg = "Failed to list films with the specified genre.";
+            write(connection_fd, msg, strlen(msg));
+        } else {
+            write(connection_fd, info, strlen(info));
+            free(info);
+        }
+    }
+}
+
 
 /**
  * Serve requests from the client application.
@@ -194,6 +214,14 @@ void serve_client(int connection_fd)
             strcpy(arguments, &receive_buffer[5]);
 
             _showFilm(connection_fd, catalog, arguments);
+
+            free(arguments);
+        }
+        else if (strncmp(receive_buffer, "filter_by_genre", 15) == 0) {
+            char* arguments = malloc(strlen(&receive_buffer[16]) * sizeof(char));
+            strcpy(arguments, &receive_buffer[16]);
+
+            _showFilmByGenre(connection_fd, catalog, arguments);
 
             free(arguments);
         }

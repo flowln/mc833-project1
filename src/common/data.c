@@ -386,3 +386,47 @@ char* listFilmById(FilmCatalog* catalog, char* film_id)
 
     return output;
 }
+
+char* listFilmByGenre(FilmCatalog* catalog, char* genre)
+{
+    char* output = calloc(4096, sizeof(char));
+
+    char sql_command[4096];
+    const char* sql_command_template = "SELECT * FROM film_catalog WHERE genres LIKE '%%%s%%'";
+    sprintf(sql_command, sql_command_template, genre);
+
+    sqlite3_stmt* statement;
+    int err_code = sqlite3_prepare_v2(catalog->db, sql_command, -1, &statement, NULL);
+    if (err_code != SQLITE_OK) {
+        printf("Failed to compile SQL command with exit code %d.\n", err_code);
+        free(output);
+        return NULL;
+    }
+
+    char row_info[4096];
+
+    int step_status = sqlite3_step(statement);
+    while (step_status == SQLITE_ROW) {
+        int id = sqlite3_column_int(statement, 0);
+        const unsigned char* title = sqlite3_column_text(statement, 1);
+        const unsigned char* genres = sqlite3_column_text(statement, 2);
+        const unsigned char* director = sqlite3_column_text(statement, 3);
+        const unsigned char* year = sqlite3_column_text(statement, 4);
+
+        sprintf(row_info, "%d,%s,%s,%s,%s;", id, title, genres, director, year);
+        strcat(output, row_info);
+
+        step_status = sqlite3_step(statement);
+    }
+
+    if (step_status != SQLITE_DONE) {
+        printf("Failed to iterate over rows: %d\n", step_status);
+        sqlite3_finalize(statement);
+        free(output);
+        return NULL;
+    }
+
+    sqlite3_finalize(statement);
+
+    return output;
+}

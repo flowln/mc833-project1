@@ -124,6 +124,31 @@ char* format_show(char* input, int* out_len)
     return out;
 }
 
+void _filter_by_genre_token_func(char** template, char* token)
+{
+    switch (token[0]) {
+        case 'g':
+            *template = "genres='%s',";
+            break;
+        default:
+            printf("Invalid token: %s\n", token);
+            break;
+    }
+}
+
+/**
+ * Properly format output of 'filter_by_genre' to send to the server.
+ */
+char* format_filter_by_genre(char* input, int* out_len)
+{
+    char* out = malloc(4096 * sizeof(char));
+    strcpy(out, "filter_by_genre ");
+
+    serializeCommandLine(input, out, _filter_by_genre_token_func, out_len);
+
+    return out;
+}
+
 
 /**
  * Run a REPL-like interactive comamnd-line interface.
@@ -140,6 +165,7 @@ void run_repl(int socket_fd)
     printf("  list_ids: List film IDs and titles available on the catalog.\n");
     printf("  list_all: List all films in the catalog, with their entire information.\n");
     printf("  show -i <id>: Show information about a particular film.\n");
+    printf("  filter_by_genre -g <genre>: Show information about all films with a specific genre.\n");
     printf("\n");
 
     int num_read;
@@ -227,6 +253,17 @@ void run_repl(int socket_fd)
         else if (strncmp(in_buffer, "show", 4) == 0) {
             int len_out_buffer;
             char* out_buffer = format_show(in_buffer, &len_out_buffer);
+            write(socket_fd, out_buffer, len_out_buffer);
+            free(out_buffer);
+
+            int response_num = recv(socket_fd, response_buf, response_buf_size, 0);
+            if (response_num > 0) {
+                printf("Server response: %s\n", response_buf);
+            }
+        }
+        else if (strncmp(in_buffer, "filter_by_genre", 15) == 0) {
+            int len_out_buffer;
+            char* out_buffer = format_filter_by_genre(in_buffer, &len_out_buffer);
             write(socket_fd, out_buffer, len_out_buffer);
             free(out_buffer);
 
