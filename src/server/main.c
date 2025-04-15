@@ -34,6 +34,32 @@ void _addFilm(int connection_fd, FilmCatalog* catalog, char* arguments)
     }
 }
 
+void _addGenres(int connection_fd, FilmCatalog* catalog, char* arguments)
+{
+    Film film = deserializeCommand(arguments);
+
+    if (film.id == NULL) {
+        const char* msg = "Required field 'id' is missing.";
+        write(connection_fd, msg, strlen(msg));
+    } else if (film.genres[0] == '\0') {
+        const char* msg = "Required field 'genres' is missing.";
+        write(connection_fd, msg, strlen(msg));
+    } else {
+        int res = addGenresToFilm(catalog, film.id, film.genres);
+
+        if (res == -2) {
+            const char* msg = "Failed to add genres to film, as the provided ID is not valid.";
+            write(connection_fd, msg, strlen(msg));
+        } else if (res != 0) {
+            const char* msg = "Failed to add genres to film.";
+            write(connection_fd, msg, strlen(msg));
+        } else {
+            const char* msg = "Successfully added genres to film.";
+            write(connection_fd, msg, strlen(msg));
+        }
+    }
+}
+
 
 /**
  * Serve requests from the client application.
@@ -77,6 +103,14 @@ void serve_client(int connection_fd)
             strcpy(arguments, &receive_buffer[9]);
 
             _addFilm(connection_fd, catalog, arguments);
+
+            free(arguments);
+        }
+        else if (strncmp(receive_buffer, "add_genres", 10) == 0) {
+            char* arguments = malloc(strlen(&receive_buffer[11]) * sizeof(char));
+            strcpy(arguments, &receive_buffer[11]);
+
+            _addGenres(connection_fd, catalog, arguments);
 
             free(arguments);
         }

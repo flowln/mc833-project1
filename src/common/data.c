@@ -122,6 +122,77 @@ int addFilmToCatalog(FilmCatalog* catalog, char* title, char* genres, char* dire
     return 0;
 }
 
+/**
+ * Retrieve the current genres for a given film ID.
+ */
+char* _getGenresFromId(FilmCatalog* catalog, char* id)
+{
+    char* output = calloc(4096, sizeof(unsigned char));
+
+    char sql_command[4096];
+    const char* sql_command_template = "SELECT genres FROM film_catalog WHERE id=%s";
+    sprintf(sql_command, sql_command_template, id);
+
+    sqlite3_stmt* statement;
+    int err_code = sqlite3_prepare_v2(catalog->db, sql_command, -1, &statement, NULL);
+    if (err_code != SQLITE_OK) {
+        printf("Failed to compile SQL command with exit code %d.\n", err_code);
+        free(output);
+        return NULL;
+    }
+
+    char row_info[4096];
+
+    int step_status = sqlite3_step(statement);
+    if (step_status == SQLITE_ROW) {
+        const unsigned char* genres = sqlite3_column_text(statement, 0);
+
+        strcpy(output, (const char*) genres);
+
+        step_status = sqlite3_step(statement);
+    } else {
+        printf("Failed to retrieve current film genres. The specified film probably doesn't exist.\n");
+        free(output);
+        return NULL;
+    }
+
+    if (step_status != SQLITE_DONE) {
+        printf("Failed to iterate over rows: %d\n", step_status);
+        free(output);
+        return NULL;
+    }
+
+    sqlite3_finalize(statement);
+
+    return output;
+}
+
+int addGenresToFilm(FilmCatalog* catalog, char* film_id, char* new_genres)
+{
+    char* genres = _getGenresFromId(catalog, film_id);
+    if (genres == NULL) {
+        return -2;  // Indicate missing film ID.
+    }
+
+    strcat(genres, " ");
+    strcat(genres, new_genres);
+
+    char sql_command[4096];
+    const char* sql_command_template = "UPDATE film_catalog SET genres = '%s' WHERE id = %s";
+    sprintf(sql_command, sql_command_template, genres, film_id);
+
+    char* error_msg;
+    int error = sqlite3_exec(catalog->db, sql_command, 0, 0, &error_msg);
+    if (error != 0) {
+        printf("Failed to add genres to film: %s\n", error_msg);
+        free(genres);
+        return -1;
+    }
+
+    free(genres);
+    return 0;
+}
+
 char* listFilmIDs(FilmCatalog* catalog)
 {
     char* output = calloc(4096, sizeof(char));
