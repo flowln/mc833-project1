@@ -34,7 +34,9 @@ void serializeCommandLine(char* input, char* out, void (*token_func)(char**, cha
 
     // Remove last comma.
     *out_len = strlen(out) - 1;
-    out[*out_len] = '\0';
+    if (out_len >= 0) {
+        out[*out_len] = '\0';
+    }
 
     free(in_cpy);
 }
